@@ -16,6 +16,16 @@ local DiggingComplete = false
 local LockpickComplete = false
 local MissionBlipActive = false
 
+function GetPositionInfrontOfElement(posX, posY, posZ, hed, distance)
+    local meters = (type(distance) == "number" and distance) or 3
+    posX = posX - math.sin(math.rad(hed)) * meters
+    posY = posY + math.cos(math.rad(hed)) * meters
+    hed = hed + math.cos(math.rad(hed))
+    local vec = vector3(posX, posY, posZ)
+    return vec
+end
+
+
 RegisterNetEvent('mms-treasure:client:starttreasure')
 AddEventHandler('mms-treasure:client:starttreasure',function()
     local randomselect = math.random(1,#Config.TreasureMissions)
@@ -37,6 +47,7 @@ AddEventHandler('mms-treasure:client:missionstart',function(selected)
     BlipSprite = selected.blipsprite
     Mission = selected.Mission
     MissionBlip = BccUtils.Blips:SetBlip(_U('MissionBlipName'), BlipSprite, 0.2, BlipCoords.x,BlipCoords.y,BlipCoords.z)
+    MissionBlipRad = BccUtils.Blips:SetRadius(-1282792512, 64.0, BlipCoords.x, BlipCoords.y, BlipCoords.z)
     MissionBlipActive = true
     TreasurePrompt = BccUtils.Prompts:SetupPromptGroup()
     treasureprompt = TreasurePrompt:RegisterPrompt(_U('PromptName'), 0x760A9C6F, 1, 1, true, 'hold', {timedeventhash = 'MEDIUM_TIMED_EVENT'})
@@ -129,8 +140,9 @@ AddEventHandler('mms-treasure:client:spawnchest', function()
             RequestModel(hash)
         end
         if  spawnedtruhe == false then
+            local chestCoords = GetPositionInfrontOfElement(playerpos.x, playerpos.y, playerpos.z, playerheading, 0.75)
             RequestModel(hash)
-            schatztruhe = CreateObject(hash, playerpos.x,playerpos.y,playerpos.z  , true, false, false) 
+            schatztruhe = CreateObject(hash, chestCoords.x,chestCoords.y,chestCoords.z  , true, false, false) 
             SetEntityHeading(schatztruhe,playerheading)
             SetEntityAsMissionEntity(schatztruhe, true,true)
             PlaceObjectOnGroundProperly(schatztruhe)
@@ -150,17 +162,7 @@ AddEventHandler('mms-treasure:client:lockpicktruhe', function(schatztruhecoords)
     if Config.ChestNeedPick == true then
     local TruheGroupPrompt = BccUtils.Prompts:SetupPromptGroup()
     truheprompt = TruheGroupPrompt:RegisterPrompt(_U('TruhePromptName'), 0x760A9C6F, 1, 1, true, 'hold', {timedeventhash = 'MEDIUM_TIMED_EVENT'})
-    deg1 = math.random(1,360)
-    deg2 = math.random(1,360)
-    deg3 = math.random(1,360)
-    local lockpicksettings = {
-        focus = true, -- Should minigame take nui focus
-        cursor = true, -- Should minigame have cursor  (required for lockpick)
-        maxattempts = 1, -- How many fail attempts are allowed before game over
-        threshold = 10, -- +- threshold to the stage degree (bigger number means easier)
-        hintdelay = 500, --milliseconds delay on when the circle will shake to show lockpick is in the right position.
-        stages = {{deg = deg1},{deg = deg2},{deg = deg3}}
-    }
+
     while spawnedtruhe == true do
         Wait(1)
         local playerCoords = GetEntityCoords(PlayerPedId())
@@ -169,19 +171,44 @@ AddEventHandler('mms-treasure:client:lockpicktruhe', function(schatztruhecoords)
             TruheGroupPrompt:ShowGroup(_U('TruhePromptName'))
             if truheprompt:HasCompleted() then
                 local lockpickresult =  VORPcore.Callback.TriggerAwait('mms-treasure:callback:checkforlockpick')
-                if lockpickresult == true then 
-                    MiniGame.Start('lockpick', lockpicksettings, function(result)
-                        if result.unlocked == true then
+                if lockpickresult == true then
+                    if (Config.LockpickType == 'ss') then
+                        local ifSuccess = exports['SS-Lockpick']:Lockpick()
+                        if ifSuccess then     
                             LockpickComplete = true
                             truheprompt:TogglePrompt(false)
                             if MissionActive == true and DiggingComplete == true and LockpickComplete == true then
-                            TriggerServerEvent('mms-treasure:server:rws')
-                            AbortMission()
+                                TriggerServerEvent('mms-treasure:server:rws')
+                                AbortMission()
                             end
-                        else
+                        else      
                             VORPcore.NotifyTip(_U('LockpickingFailed'), 5000)
                         end
-                    end)
+                    else
+                        deg1 = math.random(1,360)
+                        deg2 = math.random(1,360)
+                        deg3 = math.random(1,360)
+                        local lockpicksettings = {
+                            focus = true, -- Should minigame take nui focus
+                            cursor = true, -- Should minigame have cursor  (required for lockpick)
+                            maxattempts = 1, -- How many fail attempts are allowed before game over
+                            threshold = 10, -- +- threshold to the stage degree (bigger number means easier)
+                            hintdelay = 500, --milliseconds delay on when the circle will shake to show lockpick is in the right position.
+                            stages = {{deg = deg1},{deg = deg2},{deg = deg3}}
+                         }
+                         MiniGame.Start('lockpick', lockpicksettings, function(result)
+                            if result.unlocked == true then
+                                LockpickComplete = true
+                                truheprompt:TogglePrompt(false)
+                                if MissionActive == true and DiggingComplete == true and LockpickComplete == true then
+                                TriggerServerEvent('mms-treasure:server:rws')
+                                AbortMission()
+                                end
+                            else
+                                VORPcore.NotifyTip(_U('LockpickingFailed'), 5000)
+                            end
+                        end)
+                    end                   
                 else
                     VORPcore.NotifyTip(_U('MissingLockpick'),  5000)
             end
