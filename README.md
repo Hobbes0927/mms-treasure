@@ -36,6 +36,7 @@
 - Feather Menu by BCC
 - bcc-utils
 - bcc-minigames
+- - SS-Lockpick (if used)
 
 
 # CREDITS
