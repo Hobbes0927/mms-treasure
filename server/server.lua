@@ -77,7 +77,7 @@ RegisterServerEvent('mms-treasure:server:rws',function ()
         -- money
         local Rewardcash = math.random(Config.RewardCashMin,Config.RewardCashMax)
         Character.addCurrency(0, Rewardcash)
-        VORPcore.NotifyTip(src, _U('RewardMoney') .. Rewardcash .. ' $',  5000)
+        VORPcore.NotifyTip(src, _U('RewardMoney') .. Rewardcash,  5000)
     elseif Config.OnlyMoney == false and Config.OnlyItems == true then
         local randomitem = math.random(1,#Config.RewardItems)
         local rewarditem = Config.RewardItems[randomitem].item
@@ -97,7 +97,7 @@ RegisterServerEvent('mms-treasure:server:rws',function ()
             -- money
                 local Rewardcash = math.random(Config.RewardCashMin,Config.RewardCashMax)
                 Character.addCurrency(0, Rewardcash)
-                VORPcore.NotifyTip(src, _U('RewardMoney') .. Rewardcash .. ' $',  5000)
+                VORPcore.NotifyTip(src, _U('RewardMoney') .. Rewardcash,  5000)
             end
     end
 end)
