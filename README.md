@@ -21,6 +21,11 @@
 - 1.1.2 Some Changes with Prompt ( Only need to Overide Client.lua,Readme.md,version.txt,fxmanifest.lua)
 - 1.1.3 Fixed Bug Blinking Promp
 - Fixed Minor Bug with Lockpicking
+- Hobbes Customization
+ - Added Option for SS-Lockpick instead of BCC
+ - Added radius area to map blip to give a better picture of a search area
+ - Chest now spawns just in front of player instead of on top of player position
+ 
 
 # installation 
 
